@@ -10,13 +10,16 @@ import torchvision.transforms as transforms
 from sklearn.metrics import accuracy_score
 
 
-class LogisticRegression(nn.Module):
+class MLP(nn.Module):
     def __init__(self):
         super().__init__()
-        self.linear = nn.Linear(784, 10)
+        self.l1 = nn.Linear(784, 200)
+        self.l2 = nn.Linear(200, 10)
 
     def forward(self, x):
-        x = self.linear(x)
+        x = self.l1(x)
+        x = F.relu(x)
+        x = self.l2(x)
         y = F.log_softmax(x, dim=-1)
         return y
 
@@ -30,7 +33,7 @@ if __name__ == '__main__':
         return criterion(pred, label)
 
     def train_step(x, t):
-        model.train()
+        model.train(True)
         preds = model(x)
         loss = compute_loss(t, preds)
         optimizer.zero_grad()
@@ -40,7 +43,7 @@ if __name__ == '__main__':
         return loss, preds
 
     def test_step(x, t):
-        model.eval()
+        model.train(False)
         preds = model(x)
         loss = compute_loss(t, preds)
 
@@ -74,7 +77,7 @@ if __name__ == '__main__':
     '''
     Build model
     '''
-    model = LogisticRegression().to(device)
+    model = MLP().to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optimizers.Adam(model.parameters())
 
