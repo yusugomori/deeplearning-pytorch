@@ -100,7 +100,7 @@ if __name__ == '__main__':
                 loss, preds = test_step(x, t)
                 test_loss += loss.item()
                 test_acc += \
-                    accuracy_score(t, preds.argmax(dim=-1).tolist())
+                    accuracy_score(t.tolist(), preds.argmax(dim=-1).tolist())
 
             test_loss /= len(test_dataloader)
             test_acc /= len(test_dataloader)
