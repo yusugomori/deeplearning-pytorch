@@ -28,13 +28,13 @@ class LeNet(nn.Module):
         x = self.pooling2(x)
         x = x.view(x.size(0), -1)
         x = self.fc1(x)
-        x = F.relu(x)
+        x = torch.relu(x)
         x = self.fc2(x)
-        x = F.relu(x)
+        x = torch.relu(x)
         x = self.out(x)
-        y = F.log_softmax(x, dim=-1)
+        y = torch.log_softmax(x, dim=-1)
 
-        return x
+        return y
 
 
 if __name__ == '__main__':
@@ -46,7 +46,7 @@ if __name__ == '__main__':
         return criterion(pred, label)
 
     def train_step(x, t):
-        model.train(True)
+        model.train()
         preds = model(x)
         loss = compute_loss(t, preds)
         optimizer.zero_grad()
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         return loss, preds
 
     def test_step(x, t):
-        model.train(False)
+        model.eval()
         preds = model(x)
         loss = compute_loss(t, preds)
 
@@ -116,7 +116,7 @@ if __name__ == '__main__':
                 loss, preds = test_step(x, t)
                 test_loss += loss.item()
                 test_acc += \
-                    accuracy_score(t, preds.argmax(dim=1))
+                    accuracy_score(t, preds.argmax(dim=-1).tolist())
 
             test_loss /= len(test_dataloader)
             test_acc /= len(test_dataloader)

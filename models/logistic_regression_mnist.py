@@ -3,7 +3,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optimizers
-import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 import torchvision
 import torchvision.transforms as transforms
@@ -17,7 +16,7 @@ class LogisticRegression(nn.Module):
 
     def forward(self, x):
         x = self.linear(x)
-        y = F.log_softmax(x, dim=-1)
+        y = torch.log_softmax(x, dim=-1)
         return y
 
 
@@ -101,7 +100,7 @@ if __name__ == '__main__':
                 loss, preds = test_step(x, t)
                 test_loss += loss.item()
                 test_acc += \
-                    accuracy_score(t, preds.argmax(dim=1))
+                    accuracy_score(t, preds.argmax(dim=-1).tolist())
 
             test_loss /= len(test_dataloader)
             test_acc /= len(test_dataloader)

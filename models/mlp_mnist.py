@@ -3,7 +3,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optimizers
-import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 import torchvision
 import torchvision.transforms as transforms
@@ -18,9 +17,9 @@ class MLP(nn.Module):
 
     def forward(self, x):
         x = self.l1(x)
-        x = F.relu(x)
+        x = torch.relu(x)
         x = self.l2(x)
-        y = F.log_softmax(x, dim=-1)
+        y = torch.log_softmax(x, dim=-1)
         return y
 
 
@@ -33,7 +32,7 @@ if __name__ == '__main__':
         return criterion(pred, label)
 
     def train_step(x, t):
-        model.train(True)
+        model.train()
         preds = model(x)
         loss = compute_loss(t, preds)
         optimizer.zero_grad()
@@ -43,7 +42,7 @@ if __name__ == '__main__':
         return loss, preds
 
     def test_step(x, t):
-        model.train(False)
+        model.eval()
         preds = model(x)
         loss = compute_loss(t, preds)
 
@@ -104,7 +103,7 @@ if __name__ == '__main__':
                 loss, preds = test_step(x, t)
                 test_loss += loss.item()
                 test_acc += \
-                    accuracy_score(t, preds.argmax(dim=1))
+                    accuracy_score(t, preds.argmax(dim=-1).tolist())
 
             test_loss /= len(test_dataloader)
             test_acc /= len(test_dataloader)
