@@ -75,7 +75,7 @@ if __name__ == '__main__':
     Build model
     '''
     model = LogisticRegression().to(device)
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.NLLLoss()
     optimizer = optimizers.Adam(model.parameters())
 
     '''
