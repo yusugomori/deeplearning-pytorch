@@ -184,9 +184,12 @@ if __name__ == '__main__':
         (w2i_x, w2i_y), (i2w_x, i2w_y) = \
         load_small_parallel_enja(to_ja=True, add_bos=False)
 
-    train_dataloader = ParallelDataLoader((x_train, y_train), shuffle=True)
+    train_dataloader = ParallelDataLoader((x_train, y_train),
+                                          shuffle=True)
     valid_dataloader = ParallelDataLoader((x_test, y_test))
-    test_dataloader = ParallelDataLoader((x_test, y_test), batch_size=1)
+    test_dataloader = ParallelDataLoader((x_test, y_test),
+                                         batch_size=1,
+                                         shuffle=True)
 
     '''
     Build model
@@ -208,6 +211,9 @@ if __name__ == '__main__':
     epochs = 20
 
     for epoch in range(epochs):
+        print('-' * 20)
+        print('Epoch: {}'.format(epoch+1))
+
         train_loss = 0.
         valid_loss = 0.
 
@@ -226,7 +232,7 @@ if __name__ == '__main__':
         valid_loss /= len(valid_dataloader)
         print('Valid loss: {:.3}'.format(valid_loss))
 
-        for (source, target) in test_dataloader:
+        for idx, (source, target) in enumerate(test_dataloader):
             source, target = source.to(device), target.to(device)
             out = test_step(source)
             out = out.max(dim=-1)[1].view(-1).tolist()
@@ -237,3 +243,6 @@ if __name__ == '__main__':
             print('=', target)
             print('<', out)
             print()
+
+            if idx >= 10:
+                break
