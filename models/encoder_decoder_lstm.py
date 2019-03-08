@@ -99,7 +99,7 @@ if __name__ == '__main__':
     def compute_loss(label, pred):
         return criterion(pred, label)
 
-    def train_step(x, t, depth_t,
+    def train_step(x, t,
                    teacher_forcing_rate=0.5,
                    pad_value=0):
         use_teacher_forcing = (random.random() < teacher_forcing_rate)
@@ -116,12 +116,13 @@ if __name__ == '__main__':
 
     def valid_step(x, t):
         model.eval()
-        preds = model(x)
-        loss = compute_loss(t, preds)
+        preds = model(x, t, use_teacher_forcing=False)
+        loss = compute_loss(t.contiguous().view(-1),
+                            preds.contiguous().view(-1, preds.size(-1)))
 
         return loss, preds
 
-    def test_step(x, t):
+    def test_step(x):
         model.eval()
         preds = model(x)
         return preds
@@ -147,6 +148,9 @@ if __name__ == '__main__':
                 random_state = np.random.RandomState(1234)
             self.random_state = random_state
             self._idx = 0
+
+        def __len__(self):
+            return len(self.dataset)
 
         def __iter__(self):
             return self
@@ -205,11 +209,31 @@ if __name__ == '__main__':
 
     for epoch in range(epochs):
         train_loss = 0.
-        test_loss = 0.
+        valid_loss = 0.
 
         for (source, target) in train_dataloader:
             source, target = source.to(device), target.to(device)
-            loss, _ = train_step(source, target, num_y)
+            loss, _ = train_step(source, target)
             train_loss += loss.item()
 
         train_loss /= len(train_dataloader)
+
+        for (source, target) in valid_dataloader:
+            source, target = source.to(device), target.to(device)
+            loss, _ = valid_step(source, target)
+            valid_loss += loss.item()
+
+        valid_loss /= len(valid_dataloader)
+        print('Valid loss: {:.3}'.format(valid_loss))
+
+        for (source, target) in test_dataloader:
+            source, target = source.to(device), target.to(device)
+            out = test_step(source)
+            out = out.max(dim=-1)[1].view(-1).tolist()
+            out = ' '.join(ids_to_sentence(out, i2w_y))
+            source = ' '.join(ids_to_sentence(source.view(-1).tolist(), i2w_x))
+            target = ' '.join(ids_to_sentence(target.view(-1).tolist(), i2w_y))
+            print('>', source)
+            print('=', target)
+            print('<', out)
+            print()
