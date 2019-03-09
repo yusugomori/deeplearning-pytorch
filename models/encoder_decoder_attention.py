@@ -16,12 +16,13 @@ class EncoderDecoder(nn.Module):
                  input_dim,
                  hidden_dim,
                  output_dim,
-                 device,
+                 device='cpu',
                  bos_value=1,
                  max_len=20):
         super().__init__()
-        self.encoder = Encoder(input_dim, hidden_dim)
-        self.decoder = Decoder(hidden_dim, output_dim)
+        self.device = device
+        self.encoder = Encoder(input_dim, hidden_dim, device=device)
+        self.decoder = Decoder(hidden_dim, output_dim, device=device)
 
         self._BOS = bos_value
         self._max_len = max_len
@@ -59,8 +60,10 @@ class EncoderDecoder(nn.Module):
 class Encoder(nn.Module):
     def __init__(self,
                  input_dim,
-                 hidden_dim):
+                 hidden_dim,
+                 device='cpu'):
         super().__init__()
+        self.device = device
         self.embedding = nn.Embedding(input_dim, hidden_dim, padding_idx=0)
         self.lstm = nn.LSTM(hidden_dim, hidden_dim)
 
@@ -77,11 +80,13 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self,
                  hidden_dim,
-                 output_dim):
+                 output_dim,
+                 device='cpu'):
         super().__init__()
+        self.device = device
         self.embedding = nn.Embedding(output_dim, hidden_dim, padding_idx=0)
         self.lstm = nn.LSTM(hidden_dim, hidden_dim)
-        self.attn = Attention(hidden_dim, hidden_dim)
+        self.attn = Attention(hidden_dim, hidden_dim, device=device)
         self.out = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x, hs, states, source=None):
