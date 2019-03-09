@@ -51,16 +51,14 @@ class Transformer(nn.Module):
         source_mask = self.sequence_mask(source)
 
         if target is not None:
-            len_target_sequences = target.size()[0]
+            len_target_sequences = target.size(1)
             target_mask = self.sequence_mask(target)
             subsequent_mask = self.subsequence_mask(target)
             target_mask = \
-                target_mask.repeat(subsequent_mask.size(0), 1, 1)
-            subsequent_mask = \
-                subsequent_mask.repeat(1, target_mask.size(1), 1)
+                target_mask.unsqueeze(1).repeat(1, subsequent_mask.size(1), 1)
             target_mask = torch.gt(target_mask + subsequent_mask, 0)
         else:
-            batch_size = source.size()[1]
+            batch_size = source.size(0)
             len_target_sequences = self._max_len
             target_mask = None
 
@@ -72,28 +70,29 @@ class Transformer(nn.Module):
                              source_mask=source_mask)
             output = self.out(y)
         else:
-            output = torch.zeros((1,
-                                  batch_size,
-                                  self.output_dim),
-                                 device=device)
+            output = torch.zeros((batch_size,
+                                  1),
+                                 dtype=torch.long,
+                                 device=device) * self._BOS
 
-            for t in range(len_target_sequences):
-                out = self.decoder(y, hs, states,
+            for t in range(len_target_sequences - 1):
+                out = self.decoder(output, hs,
                                    mask=target_mask,
                                    source_mask=source_mask)
-                out = self.out(out)[:, -1, :]
+                out = self.out(out)[:, -1:, :]
                 out = out.max(-1)[1]
-                output = tf.concat((output, out), dim=-1)
+                output = torch.cat((output, out), dim=1)
 
         return output
 
     def sequence_mask(self, x):
-        return x.t().eq(0).unsqueeze(0)
+        return x.eq(0)
 
     def subsequence_mask(self, x):
-        return torch.triu(torch.ones((x.size(0), x.size(0)),
-                                     dtype=torch.uint8),
-                          diagonal=1).unsqueeze(1).to(self.device)
+        shape = (x.size(1), x.size(1))
+        mask = torch.triu(torch.ones(shape, dtype=torch.uint8),
+                          diagonal=1)
+        return mask.unsqueeze(0).repeat(x.size(0), 1, 1).to(self.device)
 
 
 class Encoder(nn.Module):
@@ -237,10 +236,10 @@ class FFN(nn.Module):
     def __init__(self, d_model, d_ff,
                  device='cpu'):
         super().__init__()
-        # self.l1 = nn.Linear(d_model, d_ff)
-        # self.l2 = nn.Linear(d_ff, d_model)
-        self.l1 = nn.Conv1d(d_model, d_ff, 1)
-        self.l2 = nn.Conv1d(d_ff, d_model, 1)
+        self.l1 = nn.Linear(d_model, d_ff)
+        self.l2 = nn.Linear(d_ff, d_model)
+        # self.l1 = nn.Conv1d(d_model, d_ff, 1)
+        # self.l2 = nn.Conv1d(d_ff, d_model, 1)
 
     def forward(self, x):
         x = self.l1(x)
@@ -320,8 +319,8 @@ if __name__ == '__main__':
             x = pad_sequences(x, padding='post')
             y = pad_sequences(y, padding='post')
 
-            x = torch.LongTensor(x).t()
-            y = torch.LongTensor(y).t()
+            x = torch.LongTensor(x)  # not use .t()
+            y = torch.LongTensor(y)  # not use .t()
 
             self._idx += self.batch_size
 
@@ -376,7 +375,7 @@ if __name__ == '__main__':
         train_loss = 0.
         valid_loss = 0.
 
-        for (source, target) in train_dataloader:
+        for idx, (source, target) in enumerate(train_dataloader):
             source, target = source.to(device), target.to(device)
             loss, _ = train_step(source, target)
             train_loss += loss.item()
@@ -394,7 +393,7 @@ if __name__ == '__main__':
         for idx, (source, target) in enumerate(test_dataloader):
             source, target = source.to(device), target.to(device)
             out = test_step(source)
-            out = out.max(dim=-1)[1].view(-1).tolist()
+            out = out.view(-1).tolist()
             out = ' '.join(ids_to_sentence(out, i2w_y))
             source = ' '.join(ids_to_sentence(source.view(-1).tolist(), i2w_x))
             target = ' '.join(ids_to_sentence(target.view(-1).tolist(), i2w_y))

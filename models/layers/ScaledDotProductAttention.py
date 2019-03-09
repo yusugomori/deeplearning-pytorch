@@ -12,7 +12,12 @@ class ScaledDotProductAttention(nn.Module):
         self.scaler = np.sqrt(d_model)
 
     def forward(self, q, k, v, mask=None):
-        score = torch.einsum('jik,lik->jil', (q, k)) / self.scaler
+        '''
+        # Argument
+            q, k, v: (batch, sequence, out_features)
+            mask:    (batch, sequence)
+        '''
+        score = torch.einsum('ijk,ilk->ijl', (q, k)) / self.scaler
         score = score - torch.max(score,
                                   dim=-1,
                                   keepdim=True)[0]  # softmax max trick
@@ -22,11 +27,11 @@ class ScaledDotProductAttention(nn.Module):
             # suppose `mask` is a mask of source
             # in source-target-attention, source is `k` and `v`
             if len(mask.size()) == 2:
-                mask = mask.unsqueeze(0)
+                mask = mask.unsqueeze(1).repeat(1, score.size(1), 1)
             # score = score * mask.float().to(self.device)
             score.data.masked_fill_(mask, 0)
 
         a = score / torch.sum(score, dim=-1, keepdim=True)
-        c = torch.einsum('jik,kil->jil', (a, v))
+        c = torch.einsum('ijk,ikl->ijl', (a, v))
 
         return c

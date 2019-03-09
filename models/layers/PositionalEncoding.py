@@ -18,7 +18,11 @@ class PositionalEncoding(nn.Module):
         self.register_buffer('pe', pe)
 
     def forward(self, x, mask=None):
-        pe = self.pe[:x.size(0), :].unsqueeze(1)
+        '''
+        # Argument
+            x: (batch, sequence)
+        '''
+        pe = self.pe[:x.size(1), :].unsqueeze(0)
         return x + Variable(pe, requires_grad=False)
 
     def initializer(self):

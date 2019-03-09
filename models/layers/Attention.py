@@ -29,6 +29,11 @@ class Attention(nn.Module):
         nn.init.xavier_normal_(self.W_c)
 
     def forward(self, ht, hs, source=None, pad_value=0):
+        '''
+        # Argument
+            ht, hs: (sequence, batch, out_features)
+            source: (sequence, batch)
+        '''
         score = torch.einsum('jik,kl->jil', (hs, self.W_a))
         score = torch.einsum('jik,lik->jil', (ht, score))
 
