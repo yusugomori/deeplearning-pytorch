@@ -21,7 +21,8 @@ class DotProductAttention(nn.Module):
             # in source-target-attention, source is `k` and `v`
             if len(mask.size()) == 2:
                 mask = mask.unsqueeze(0)
-            score = score * mask.type(torch.Tensor).to(self.device)
+            # score = score * mask.float().to(self.device)
+            score.data.masked_fill_(mask, 0)
 
         a = score / torch.sum(score, dim=-1, keepdim=True)
         c = torch.einsum('jik,kil->jil', (a, v))

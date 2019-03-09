@@ -16,9 +16,9 @@ class EncoderDecoder(nn.Module):
                  input_dim,
                  hidden_dim,
                  output_dim,
-                 device='cpu',
                  bos_value=1,
-                 max_len=20):
+                 max_len=20,
+                 device='cpu'):
         super().__init__()
         self.device = device
         self.encoder = Encoder(input_dim, hidden_dim, device=device)

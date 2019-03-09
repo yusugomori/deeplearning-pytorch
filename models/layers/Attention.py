@@ -38,8 +38,10 @@ class Attention(nn.Module):
 
         score = torch.exp(score)
         if source is not None:
-            mask_source = (source.t() != pad_value).unsqueeze(0)
-            score = score * mask_source.float().to(self.device)
+            # mask_source = (source.t() != pad_value).unsqueeze(0)
+            # score = score * mask_source.float().to(self.device)
+            mask_source = source.t().eq(pad_value).unsqueeze(0)
+            score.data.masked_fill_(mask_source, 0)
 
         a = score / torch.sum(score, dim=-1, keepdim=True)
         c = torch.einsum('jik,kil->jil', (a, hs))
