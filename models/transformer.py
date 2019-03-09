@@ -43,12 +43,16 @@ class Transformer(nn.Module):
                                max_len=max_len,
                                device=device)
         self.out = nn.Linear(d_model, depth_target)
+        nn.init.xavier_normal_(self.out.weight)
+
         self._BOS = bos_value
         self._max_len = max_len
         self.output_dim = output_dim
 
     def forward(self, source, target=None):
         source_mask = self.sequence_mask(source)
+
+        hs = self.encoder(source, mask=source_mask)
 
         if target is not None:
             len_target_sequences = target.size(1)
@@ -57,24 +61,21 @@ class Transformer(nn.Module):
             target_mask = \
                 target_mask.unsqueeze(1).repeat(1, subsequent_mask.size(1), 1)
             target_mask = torch.gt(target_mask + subsequent_mask, 0)
-        else:
-            batch_size = source.size(0)
-            len_target_sequences = self._max_len
-            target_mask = None
 
-        hs = self.encoder(source, mask=source_mask)
-
-        if target is not None:
             y = self.decoder(target, hs,
                              mask=target_mask,
                              source_mask=source_mask)
             output = self.out(y)
         else:
+            batch_size = source.size(0)
+            len_target_sequences = self._max_len
+
             output = torch.ones((batch_size, 1),
                                 dtype=torch.long,
                                 device=device) * self._BOS
 
             for t in range(len_target_sequences - 1):
+                target_mask = self.subsequence_mask(output)
                 out = self.decoder(output, hs,
                                    mask=target_mask,
                                    source_mask=source_mask)
@@ -335,7 +336,7 @@ if __name__ == '__main__':
         (x_test, y_test), \
         (num_x, num_y), \
         (w2i_x, w2i_y), (i2w_x, i2w_y) = \
-        load_small_parallel_enja(to_ja=True, add_bos=False)
+        load_small_parallel_enja(to_ja=True)
 
     train_dataloader = ParallelDataLoader((x_train, y_train),
                                           shuffle=True)
@@ -356,7 +357,7 @@ if __name__ == '__main__':
                         N=3,
                         h=4,
                         d_model=128,
-                        d_ff=128,
+                        d_ff=256,
                         max_len=20,
                         device=device).to(device)
     criterion = nn.CrossEntropyLoss(reduction='sum', ignore_index=0)
