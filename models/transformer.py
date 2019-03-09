@@ -9,7 +9,7 @@ from utils.datasets.small_parallel_enja import load_small_parallel_enja
 from utils.preprocessing.sequence import pad_sequences, sort
 from sklearn.utils import shuffle
 from layers import PositionalEncoding
-from layers import ScaledDotProductAttention as MultiHeadAttention
+from layers import MultiHeadAttention
 
 
 class Transformer(nn.Module):
