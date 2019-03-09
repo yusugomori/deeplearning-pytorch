@@ -70,10 +70,9 @@ class Transformer(nn.Module):
                              source_mask=source_mask)
             output = self.out(y)
         else:
-            output = torch.zeros((batch_size,
-                                  1),
-                                 dtype=torch.long,
-                                 device=device) * self._BOS
+            output = torch.ones((batch_size, 1),
+                                dtype=torch.long,
+                                device=device) * self._BOS
 
             for t in range(len_target_sequences - 1):
                 out = self.decoder(output, hs,
