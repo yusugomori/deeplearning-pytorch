@@ -1,4 +1,4 @@
-import torch.nn
+import torch.nn as nn
 
 
 class Flatten(nn.Module):
