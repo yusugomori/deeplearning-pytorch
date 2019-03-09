@@ -8,6 +8,7 @@ from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from utils.datasets.small_parallel_enja import load_small_parallel_enja
 from utils.preprocessing.sequence import pad_sequences, sort
 from sklearn.utils import shuffle
+from layers import Attention
 
 
 class EncoderDecoder(nn.Module):
@@ -15,10 +16,9 @@ class EncoderDecoder(nn.Module):
                  input_dim,
                  hidden_dim,
                  output_dim,
-                 device,
+                 device='cpu',
                  bos_value=1,
-                 max_len=20,
-                 device='cpu'):
+                 max_len=20):
         super().__init__()
         self.device = device
         self.encoder = Encoder(input_dim, hidden_dim, device=device)
@@ -35,7 +35,7 @@ class EncoderDecoder(nn.Module):
         else:
             len_target_sequences = self._max_len
 
-        _, states = self.encoder(source)
+        hs, states = self.encoder(source)
 
         y = torch.ones((1, batch_size),
                        dtype=torch.long,
@@ -46,7 +46,7 @@ class EncoderDecoder(nn.Module):
                              device=device)
 
         for t in range(len_target_sequences):
-            out, states = self.decoder(y, states)
+            out, states = self.decoder(y, hs, states, source=source)
             output[t] = out
 
             if use_teacher_forcing and target is not None:
@@ -86,11 +86,13 @@ class Decoder(nn.Module):
         self.device = device
         self.embedding = nn.Embedding(output_dim, hidden_dim, padding_idx=0)
         self.lstm = nn.LSTM(hidden_dim, hidden_dim)
+        self.attn = Attention(hidden_dim, hidden_dim, device=device)
         self.out = nn.Linear(hidden_dim, output_dim)
 
-    def forward(self, x, states):
+    def forward(self, x, hs, states, source=None):
         x = self.embedding(x)
         x, states = self.lstm(x, states)
+        x = self.attn(x, hs, source=source)
         y = self.out(x)
         # y = torch.log_softmax(x, dim=-1)
 
