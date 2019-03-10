@@ -44,14 +44,14 @@ class MultiHeadAttention(nn.Module):
         batch_size = q.size(0)
 
         q = torch.einsum('hijk,hkl->hijl',
-                         q.unsqueeze(0).repeat(self.h, 1, 1, 1),
-                         self.W_q)
+                         (q.unsqueeze(0).repeat(self.h, 1, 1, 1),
+                          self.W_q))
         k = torch.einsum('hijk,hkl->hijl',
-                         k.unsqueeze(0).repeat(self.h, 1, 1, 1),
-                         self.W_k)
+                         (k.unsqueeze(0).repeat(self.h, 1, 1, 1),
+                          self.W_k))
         v = torch.einsum('hijk,hkl->hijl',
-                         v.unsqueeze(0).repeat(self.h, 1, 1, 1),
-                         self.W_v)
+                         (v.unsqueeze(0).repeat(self.h, 1, 1, 1),
+                          self.W_v))
 
         q = q.view(-1, q.size(-2), q.size(-1))
         k = k.view(-1, k.size(-2), k.size(-1))
