@@ -56,10 +56,8 @@ class Transformer(nn.Module):
 
         if target is not None:
             len_target_sequences = target.size(1)
-            target_mask = self.sequence_mask(target)
+            target_mask = self.sequence_mask(target).unsqueeze(1)
             subsequent_mask = self.subsequence_mask(target)
-            target_mask = \
-                target_mask.unsqueeze(1).repeat(1, subsequent_mask.size(1), 1)
             target_mask = torch.gt(target_mask + subsequent_mask, 0)
 
             y = self.decoder(target, hs,
