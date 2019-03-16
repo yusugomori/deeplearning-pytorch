@@ -186,7 +186,7 @@ if __name__ == '__main__':
     '''
     Train model
     '''
-    epochs = 4
+    epochs = 1
 
     for epoch in range(epochs):
         train_loss = 0.
