@@ -24,23 +24,26 @@ class ResNet34(nn.Module):
                                   stride=(2, 2),
                                   padding=1)
         self.block1 = nn.ModuleList([
-            Block(64, 64) for _ in range(3)
+            self._building_block(64) for _ in range(3)
         ])
         self.conv2 = nn.Conv2d(64, 128,
                                kernel_size=(1, 1),
                                stride=(2, 2))
         self.block2 = nn.ModuleList([
-            Block(128, 128) for _ in range(4)
+            self._building_block(128) for _ in range(4)
         ])
         self.conv3 = nn.Conv2d(128, 256,
                                kernel_size=(1, 1),
                                stride=(2, 2))
         self.block3 = nn.ModuleList([
-            Block(256, 256) for _ in range(6)
+            self._building_block(256) for _ in range(6)
         ])
         self.conv4 = nn.Conv2d(256, 512,
                                kernel_size=(1, 1),
                                stride=(2, 2))
+        self.block4 = nn.ModuleList([
+            self._building_block(512) for _ in range(3)
+        ])
         self.avg_pool = GlobalAvgPool2d()
         self.fc = nn.Linear(512, 1000)
         self.out = nn.Linear(1000, output_dim)
@@ -59,6 +62,8 @@ class ResNet34(nn.Module):
         for block in self.block3:
             h = block(h)
         h = self.conv4(h)
+        for block in self.block4:
+            h = block(h)
         h = self.avg_pool(h)
         h = self.fc(h)
         h = torch.relu(h)
@@ -66,6 +71,10 @@ class ResNet34(nn.Module):
         y = torch.log_softmax(h, dim=-1)
 
         return y
+
+    def _building_block(self, channel_out=64):
+        channel_in = channel_out
+        return Block(channel_in, channel_out)
 
 
 class Block(nn.Module):
@@ -146,12 +155,12 @@ if __name__ == '__main__':
     '''
     model = ResNet34(10).to(device)
     criterion = nn.NLLLoss()
-    optimizer = optimizers.Adam(model.parameters())
+    optimizer = optimizers.Adam(model.parameters(), weight_decay=0.01)
 
     '''
     Train model
     '''
-    epochs = 10
+    epochs = 1
 
     for epoch in range(epochs):
         train_loss = 0.
