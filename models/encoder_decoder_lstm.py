@@ -15,7 +15,6 @@ class EncoderDecoder(nn.Module):
                  input_dim,
                  hidden_dim,
                  output_dim,
-                 device,
                  bos_value=1,
                  max_len=20,
                  device='cpu'):
