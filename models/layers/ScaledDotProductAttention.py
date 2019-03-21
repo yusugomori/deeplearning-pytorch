@@ -5,11 +5,11 @@ import torch.nn as nn
 
 class ScaledDotProductAttention(nn.Module):
     def __init__(self,
-                 d_model,
+                 d_k,
                  device='cpu'):
         super().__init__()
         self.device = device
-        self.scaler = np.sqrt(d_model)
+        self.scaler = np.sqrt(d_k)
 
     def forward(self, q, k, v, mask=None):
         '''

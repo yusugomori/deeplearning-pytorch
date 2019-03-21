@@ -31,7 +31,7 @@ class MultiHeadAttention(nn.Module):
         nn.init.xavier_normal_(self.W_k)
         nn.init.xavier_normal_(self.W_v)
 
-        self.attn = ScaledDotProductAttention(d_model)
+        self.attn = ScaledDotProductAttention(d_k)
         self.linear = nn.Linear((h * d_v), d_model)
         nn.init.xavier_normal_(self.linear.weight)
 
