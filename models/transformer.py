@@ -4,7 +4,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optimizers
 # from torch.utils.data import Dataset, DataLoader
-from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 from utils.datasets.small_parallel_enja import load_small_parallel_enja
 from utils.preprocessing.sequence import pad_sequences, sort
 from sklearn.utils import shuffle
@@ -47,7 +46,6 @@ class Transformer(nn.Module):
 
         self._BOS = bos_value
         self._max_len = max_len
-        self.output_dim = output_dim
 
     def forward(self, source, target=None):
         source_mask = self.sequence_mask(source)
@@ -55,6 +53,7 @@ class Transformer(nn.Module):
         hs = self.encoder(source, mask=source_mask)
 
         if target is not None:
+            target = target[:, :-1]
             len_target_sequences = target.size(1)
             target_mask = self.sequence_mask(target).unsqueeze(1)
             subsequent_mask = self.subsequence_mask(target)
@@ -257,7 +256,7 @@ if __name__ == '__main__':
     def train_step(x, t):
         model.train()
         preds = model(x, t)
-        loss = compute_loss(t.contiguous().view(-1),
+        loss = compute_loss(t[:, 1:].contiguous().view(-1),
                             preds.contiguous().view(-1, preds.size(-1)))
 
         optimizer.zero_grad()
@@ -269,7 +268,7 @@ if __name__ == '__main__':
     def valid_step(x, t):
         model.eval()
         preds = model(x, t)
-        loss = compute_loss(t.contiguous().view(-1),
+        loss = compute_loss(t[:, 1:].contiguous().view(-1),
                             preds.contiguous().view(-1, preds.size(-1)))
 
         return loss, preds
@@ -346,10 +345,6 @@ if __name__ == '__main__':
     '''
     Build model
     '''
-    input_dim = num_x
-    hidden_dim = 128
-    output_dim = num_y
-
     model = Transformer(num_x,
                         num_y,
                         N=3,
