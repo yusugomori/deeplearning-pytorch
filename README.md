@@ -31,7 +31,6 @@ models/
 ├── mlp_mnist.py
 ├── resnet34_fashion_mnist.py
 ├── resnet50_fashion_mnist.py
-└── transformer.py
 ├── transformer.py
 │
 └── layers/
