@@ -11,3 +11,35 @@ See also implementations with TesorFlow 2.0 [here](https://github.com/yusugomori
 ```shell
 $ pip install torch torchvision
 ```
+
+## Models
+
+* Logistic Regression
+* MLP
+* LeNet
+* ResNet (ResNet34, ResNet50)
+* Encoder-Decoder (LSTM)
+* EncoderDecoder (Attention)
+* Transformer
+
+```
+models/
+├── encoder_decoder_attention.py
+├── encoder_decoder_lstm.py
+├── lenet_mnist.py
+├── logistic_regression_mnist.py
+├── mlp_mnist.py
+├── resnet34_fashion_mnist.py
+├── resnet50_fashion_mnist.py
+└── transformer.py
+├── transformer.py
+│
+└── layers/
+    ├── Attention.py
+    ├── DotProductAttention.py
+    ├── Flatten.py
+    ├── GlobalAvgPool2d.py
+    ├── MultiHeadAttention.py
+    ├── PositionalEncoding.py
+    └── ScaledDotProductAttention.py
+```
