@@ -150,7 +150,7 @@ if __name__ == '__main__':
     '''
     Build ReplayMemory
     '''
-    initial_memory_size = 10
+    initial_memory_size = 500
     replay_memory = ReplayMemory(device=device)
 
     step = 0
@@ -178,6 +178,7 @@ if __name__ == '__main__':
     copy_original_every = 1000
     eps = Epsilon()
 
+    model.copy_original()
     for episode in range(n_episodes):
         state = env.reset()
         terminal = False
