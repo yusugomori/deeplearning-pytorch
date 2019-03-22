@@ -21,6 +21,7 @@ $ pip install torch torchvision
 * Encoder-Decoder (LSTM)
 * EncoderDecoder (Attention)
 * Transformer
+* Deep Q-Network
 
 ```
 models/
