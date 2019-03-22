@@ -135,13 +135,6 @@ if __name__ == '__main__':
 
         return loss
 
-    def test_step(x, t):
-        model.eval()
-        preds = model(x)
-        loss = compute_loss(t, preds)
-
-        return loss
-
     '''
     Load env
     '''
