@@ -22,12 +22,14 @@ $ pip install torch torchvision
 * EncoderDecoder (Attention)
 * Transformer
 * Deep Q-Network
+* Generative Adversarial Network
 
 ```
 models/
 ├── dqn_cartpole.py
 ├── encoder_decoder_attention.py
 ├── encoder_decoder_lstm.py
+├── gan_fashion_mnist.py
 ├── lenet_mnist.py
 ├── logistic_regression_mnist.py
 ├── mlp_mnist.py
