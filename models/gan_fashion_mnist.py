@@ -16,10 +16,11 @@ class GAN(nn.Module):
     '''
     Simple Generative Adversarial Network
     '''
-    def __init__(self):
+    def __init__(self, device='cpu'):
         super().__init__()
-        self.G = Generator()
-        self.D = Discriminator()
+        self.device = device
+        self.G = Generator(device=device)
+        self.D = Discriminator(device=device)
 
     def forward(self, x):
         x = self.G(x)
@@ -29,8 +30,9 @@ class GAN(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self):
+    def __init__(self, device='cpu'):
         super().__init__()
+        self.device = device
         self.conv1 = nn.Conv2d(1, 256,
                                kernel_size=(3, 3),
                                stride=(2, 2),
@@ -72,8 +74,10 @@ class Discriminator(nn.Module):
 
 class Generator(nn.Module):
     def __init__(self,
-                 input_dim=100):
+                 input_dim=100,
+                 device='cpu'):
         super().__init__()
+        self.device = device
         self.linear = nn.Linear(input_dim, 256*14*14)
         self.bn1 = nn.BatchNorm1d(256*14*14)
         self.relu1 = nn.ReLU()
@@ -182,7 +186,7 @@ if __name__ == '__main__':
     '''
     Build model
     '''
-    model = GAN().to(device)
+    model = GAN(device=device).to(device)
     criterion = nn.BCELoss()
     optimizer_D = optimizers.Adam(model.D.parameters())
     optimizer_G = optimizers.Adam(model.G.parameters())

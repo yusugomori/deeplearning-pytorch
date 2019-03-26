@@ -16,22 +16,25 @@ class CGAN(nn.Module):
     '''
     Simple Conditional GAN
     '''
-    def __init__(self):
+    def __init__(self, device='cpu'):
         super().__init__()
-        self.G = Generator()
-        self.D = Discriminator()
+        self.device = device
+        self.G = Generator(device=device)
+        self.D = Discriminator(device=device)
 
     def forward(self, x, cond):
         x = self.G(x, cond)
-        y = self.D(x)
+        y = self.D(x, cond)
 
         return y
 
 
 class Discriminator(nn.Module):
-    def __init__(self):
+    def __init__(self, device='cpu'):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 256,
+        self.device = device
+        self.reshape = lambda x: torch.ones(10, 28, 28).to(device) * x
+        self.conv1 = nn.Conv2d(1+10, 256,
                                kernel_size=(3, 3),
                                stride=(2, 2),
                                padding=1)
@@ -52,7 +55,10 @@ class Discriminator(nn.Module):
         for l in [self.conv1, self.conv2, self.fc, self.out]:
             nn.init.xavier_uniform_(l.weight)
 
-    def forward(self, x):
+    def forward(self, x, cond):
+        cond = cond.view(-1, 10, 1, 1)
+        cond = self.reshape(cond)
+        x = torch.cat((x, cond), dim=1)
         h = self.conv1(x)
         h = self.relu1(h)
         h = self.dropout1(h)
@@ -72,8 +78,10 @@ class Discriminator(nn.Module):
 
 class Generator(nn.Module):
     def __init__(self,
-                 input_dim=100):
+                 input_dim=100,
+                 device='cpu'):
         super().__init__()
+        self.device = device
         self.linear = nn.Linear(input_dim+10, 256*14*14)
         self.bn1 = nn.BatchNorm1d(256*14*14)
         self.relu1 = nn.ReLU()
@@ -127,16 +135,18 @@ if __name__ == '__main__':
 
         # train D
         # real images
-        preds = model.D(x).squeeze()  # preds with true images
-        t = torch.ones(batch_size).float().to(device)
-        loss_D_real = compute_loss(t, preds)
+        cond = torch.eye(10)[t.long()].float().to(device)
+        preds = model.D(x, cond).squeeze()  # preds with true images
+        label = torch.ones(batch_size).float().to(device)
+        loss_D_real = compute_loss(label, preds)
         # fake images
         noise = gen_noise(batch_size)
-        cond = torch.eye(10)[t.long()].float().to(device)
+        cond = torch.randint(0, 10, (batch_size,))
+        cond = torch.eye(10)[cond.long()].float().to(device)
         z = model.G(noise, cond)
-        preds = model.D(z.detach()).squeeze()  # preds with fake images
-        t = torch.zeros(batch_size).float().to(device)
-        loss_D_fake = compute_loss(t, preds)
+        preds = model.D(z.detach(), cond).squeeze()  # preds with fake images
+        label = torch.zeros(batch_size).float().to(device)
+        loss_D_fake = compute_loss(label, preds)
 
         loss_D = loss_D_real + loss_D_fake
         optimizer_D.zero_grad()
@@ -148,9 +158,9 @@ if __name__ == '__main__':
         cond = torch.randint(0, 10, (batch_size,))
         cond = torch.eye(10)[cond.long()].float().to(device)
         z = model.G(noise, cond)
-        preds = model.D(z).squeeze()  # preds with fake images
-        t = torch.ones(batch_size).float().to(device)  # label as true
-        loss_G = compute_loss(t, preds)
+        preds = model.D(z, cond).squeeze()  # preds with fake images
+        label = torch.ones(batch_size).float().to(device)  # label as true
+        loss_G = compute_loss(label, preds)
         optimizer_G.zero_grad()
         loss_G.backward()
         optimizer_G.step()
@@ -187,7 +197,7 @@ if __name__ == '__main__':
     '''
     Build model
     '''
-    model = CGAN().to(device)
+    model = CGAN(device=device).to(device)
     criterion = nn.BCELoss()
     optimizer_D = optimizers.Adam(model.D.parameters())
     optimizer_G = optimizers.Adam(model.G.parameters())
