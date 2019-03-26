@@ -65,7 +65,7 @@ if __name__ == '__main__':
     '''
     Load data
     '''
-    root = os.path.join(os.path.dirname(__file__), '..', 'data')
+    root = os.path.join(os.path.dirname(__file__), '..', 'data', 'mnist')
     transform = transforms.Compose([transforms.ToTensor(),
                                     lambda x: x / 255.])
     mnist_train = \
