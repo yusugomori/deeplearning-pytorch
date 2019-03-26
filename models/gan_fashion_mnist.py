@@ -226,4 +226,4 @@ if __name__ == '__main__':
             plt.tight_layout()
             # plt.show()
             template = '{}/gan_fashion_mnist_epoch_{:0>4}.png'
-            plt.savefig(template.format(out_path, epoch), dpi=300)
+            plt.savefig(template.format(out_path, epoch+1), dpi=300)
