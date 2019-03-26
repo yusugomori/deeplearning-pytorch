@@ -34,26 +34,24 @@ class Discriminator(nn.Module):
         super().__init__()
         self.device = device
         self.reshape = lambda x: torch.ones(10, 28, 28).to(device) * x
-        self.conv1 = nn.Conv2d(1+10, 256,
+        self.conv1 = nn.Conv2d(1+10, 128,
                                kernel_size=(3, 3),
                                stride=(2, 2),
                                padding=1)
         self.relu1 = nn.LeakyReLU(0.2)
-        self.dropout1 = nn.Dropout(0.3)
-        self.conv2 = nn.Conv2d(256, 512,
+        self.conv2 = nn.Conv2d(128, 256,
                                kernel_size=(3, 3),
                                stride=(2, 2),
                                padding=1)
-        self.bn2 = nn.BatchNorm2d(512)
+        self.bn2 = nn.BatchNorm2d(256)
         self.relu2 = nn.LeakyReLU(0.2)
-        self.dropout2 = nn.Dropout(0.3)
-        self.fc = nn.Linear(512*7*7, 1024)
+        self.fc = nn.Linear(256*7*7, 1024)
         self.bn3 = nn.BatchNorm1d(1024)
         self.relu3 = nn.LeakyReLU(0.2)
         self.out = nn.Linear(1024, 1)
 
         for l in [self.conv1, self.conv2, self.fc, self.out]:
-            nn.init.xavier_uniform_(l.weight)
+            nn.init.xavier_normal_(l.weight)
 
     def forward(self, x, cond):
         cond = cond.view(-1, 10, 1, 1)
@@ -61,12 +59,10 @@ class Discriminator(nn.Module):
         x = torch.cat((x, cond), dim=1)
         h = self.conv1(x)
         h = self.relu1(h)
-        h = self.dropout1(h)
         h = self.conv2(h)
         h = self.bn2(h)
         h = self.relu2(h)
-        h = self.dropout2(h)
-        h = h.view(-1, 512*7*7)
+        h = h.view(-1, 256*7*7)
         h = self.fc(h)
         h = self.bn3(h)
         h = self.relu3(h)
@@ -99,7 +95,7 @@ class Generator(nn.Module):
                                kernel_size=(1, 1))
 
         for l in [self.conv1, self.conv2, self.conv3]:
-            nn.init.xavier_uniform_(l.weight)
+            nn.init.xavier_normal_(l.weight)
 
     def forward(self, x, cond):
         x = torch.cat((x, cond), dim=-1)
@@ -141,10 +137,9 @@ if __name__ == '__main__':
         loss_D_real = compute_loss(label, preds)
         # fake images
         noise = gen_noise(batch_size)
-        cond = torch.randint(0, 10, (batch_size,))
-        cond = torch.eye(10)[cond.long()].float().to(device)
-        z = model.G(noise, cond)
-        preds = model.D(z.detach(), cond).squeeze()  # preds with fake images
+        cond = gen_cond(batch_size).detach()
+        z = model.G(noise, cond).detach()
+        preds = model.D(z, cond).squeeze()  # preds with fake images
         label = torch.zeros(batch_size).float().to(device)
         loss_D_fake = compute_loss(label, preds)
 
@@ -155,8 +150,7 @@ if __name__ == '__main__':
 
         # train G
         noise = gen_noise(batch_size)
-        cond = torch.randint(0, 10, (batch_size,))
-        cond = torch.eye(10)[cond.long()].float().to(device)
+        cond = gen_cond(batch_size)
         z = model.G(noise, cond)
         preds = model.D(z, cond).squeeze()  # preds with fake images
         label = torch.ones(batch_size).float().to(device)  # label as true
@@ -177,6 +171,12 @@ if __name__ == '__main__':
 
     def gen_noise(batch_size):
         return torch.empty(batch_size, 100).uniform_(0, 1).to(device)
+
+    def gen_cond(batch_size, one_hot=True):
+        cond = torch.randint(0, 10, (batch_size,)).long()
+        if not one_hot:
+            return cond.to(device)
+        return torch.eye(10)[cond].float().to(device)
 
     '''
     Load data
@@ -199,13 +199,13 @@ if __name__ == '__main__':
     '''
     model = CGAN(device=device).to(device)
     criterion = nn.BCELoss()
-    optimizer_D = optimizers.Adam(model.D.parameters())
-    optimizer_G = optimizers.Adam(model.G.parameters())
+    optimizer_D = optimizers.Adam(model.D.parameters(), lr=0.0002)
+    optimizer_G = optimizers.Adam(model.G.parameters(), lr=0.0002)
 
     '''
     Train model
     '''
-    epochs = 100
+    epochs = 1000
     out_path = os.path.join(os.path.dirname(__file__),
                             '..', 'output')
 

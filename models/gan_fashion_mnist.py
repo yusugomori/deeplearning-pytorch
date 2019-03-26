@@ -33,20 +33,18 @@ class Discriminator(nn.Module):
     def __init__(self, device='cpu'):
         super().__init__()
         self.device = device
-        self.conv1 = nn.Conv2d(1, 256,
+        self.conv1 = nn.Conv2d(1, 128,
                                kernel_size=(3, 3),
                                stride=(2, 2),
                                padding=1)
         self.relu1 = nn.LeakyReLU(0.2)
-        self.dropout1 = nn.Dropout(0.3)
-        self.conv2 = nn.Conv2d(256, 512,
+        self.conv2 = nn.Conv2d(128, 256,
                                kernel_size=(3, 3),
                                stride=(2, 2),
                                padding=1)
-        self.bn2 = nn.BatchNorm2d(512)
+        self.bn2 = nn.BatchNorm2d(256)
         self.relu2 = nn.LeakyReLU(0.2)
-        self.dropout2 = nn.Dropout(0.3)
-        self.fc = nn.Linear(512*7*7, 1024)
+        self.fc = nn.Linear(256*7*7, 1024)
         self.bn3 = nn.BatchNorm1d(1024)
         self.relu3 = nn.LeakyReLU(0.2)
         self.out = nn.Linear(1024, 1)
@@ -57,12 +55,10 @@ class Discriminator(nn.Module):
     def forward(self, x):
         h = self.conv1(x)
         h = self.relu1(h)
-        h = self.dropout1(h)
         h = self.conv2(h)
         h = self.bn2(h)
         h = self.relu2(h)
-        h = self.dropout2(h)
-        h = h.view(-1, 512*7*7)
+        h = h.view(-1, 256*7*7)
         h = self.fc(h)
         h = self.bn3(h)
         h = self.relu3(h)
@@ -188,8 +184,8 @@ if __name__ == '__main__':
     '''
     model = GAN(device=device).to(device)
     criterion = nn.BCELoss()
-    optimizer_D = optimizers.Adam(model.D.parameters())
-    optimizer_G = optimizers.Adam(model.G.parameters())
+    optimizer_D = optimizers.Adam(model.D.parameters(), lr=0.0002)
+    optimizer_G = optimizers.Adam(model.G.parameters(), lr=0.0002)
 
     '''
     Train model
