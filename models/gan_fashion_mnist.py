@@ -49,6 +49,9 @@ class Discriminator(nn.Module):
         self.relu3 = nn.LeakyReLU(0.2)
         self.out = nn.Linear(1024, 1)
 
+        for l in [self.conv1, self.conv2, self.fc, self.out]:
+            nn.init.xavier_uniform_(l.weight)
+
     def forward(self, x):
         h = self.conv1(x)
         h = self.relu1(h)
@@ -86,6 +89,9 @@ class Generator(nn.Module):
         self.relu3 = nn.ReLU()
         self.conv3 = nn.Conv2d(64, 1,
                                kernel_size=(1, 1))
+
+        for l in [self.conv1, self.conv2, self.conv3]:
+            nn.init.xavier_uniform_(l.weight)
 
     def forward(self, x):
         h = self.linear(x)

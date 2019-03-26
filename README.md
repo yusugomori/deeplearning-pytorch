@@ -19,7 +19,7 @@ $ pip install torch torchvision
 * LeNet
 * ResNet (ResNet34, ResNet50)
 * Encoder-Decoder (LSTM)
-* EncoderDecoder (Attention)
+* Encoder-Decoder (Attention)
 * Transformer
 * Deep Q-Network
 * Generative Adversarial Network
