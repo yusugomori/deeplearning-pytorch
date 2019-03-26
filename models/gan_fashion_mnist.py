@@ -10,7 +10,6 @@ import torchvision.transforms as transforms
 import matplotlib
 # matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from layers import GlobalAvgPool2d
 
 
 class GAN(nn.Module):
@@ -27,11 +26,6 @@ class GAN(nn.Module):
         y = self.D(x)
 
         return y
-
-    def set_trainable(self, net, trainable=True):
-        params = net.parameters()
-        for p in params:
-            p.requires_grad = trainable
 
 
 class Discriminator(nn.Module):
