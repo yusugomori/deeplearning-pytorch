@@ -23,9 +23,11 @@ $ pip install torch torchvision
 * Transformer
 * Deep Q-Network
 * Generative Adversarial Network
+* Conditional GAN
 
 ```
 models/
+├── conditonal_gan_mnist.py
 ├── dqn_cartpole.py
 ├── encoder_decoder_attention.py
 ├── encoder_decoder_lstm.py
