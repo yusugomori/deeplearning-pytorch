@@ -69,7 +69,7 @@ class Transformer(nn.Module):
 
             output = torch.ones((batch_size, 1),
                                 dtype=torch.long,
-                                device=device) * self._BOS
+                                device=self.device) * self._BOS
 
             for t in range(len_target_sequences - 1):
                 target_mask = self.subsequence_mask(output)
