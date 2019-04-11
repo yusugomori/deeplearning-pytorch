@@ -182,8 +182,8 @@ if __name__ == '__main__':
 
         def _reorder(self):
             if self.shuffle:
-                self.data = shuffle(self.dataset,
-                                    random_state=self.random_state)
+                self.dataset = shuffle(self.dataset,
+                                       random_state=self.random_state)
             self._idx = 0
 
     (x_train, y_train), \
