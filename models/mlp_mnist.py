@@ -53,8 +53,7 @@ if __name__ == '__main__':
     '''
     root = os.path.join(os.path.dirname(__file__), '..', 'data', 'mnist')
     transform = transforms.Compose([transforms.ToTensor(),
-                                    lambda x: x.view(-1),
-                                    lambda x: x / 255.])
+                                    lambda x: x.view(-1)])
     mnist_train = \
         torchvision.datasets.MNIST(root=root,
                                    download=True,
