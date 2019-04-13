@@ -22,6 +22,7 @@ $ pip install torch torchvision
 * Encoder-Decoder (Attention)
 * Transformer
 * Deep Q-Network
+* Variational Autoencoder
 * Generative Adversarial Network
 * Conditional GAN
 
@@ -38,6 +39,7 @@ models/
 ├── resnet34_fashion_mnist.py
 ├── resnet50_fashion_mnist.py
 ├── transformer.py
+├── vae_fashion_mnist.py
 │
 └── layers/
     ├── Attention.py
